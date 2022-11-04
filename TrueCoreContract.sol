@@ -4,13 +4,13 @@ contract TrueCoreContract {
 
     // Addresses
     // TrueCore
-    address private issuer; // 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4
+    address private issuer;
 
     // Spotify and other hosting company
-    address private holder; // 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2
+    address private holder;
 
     // Solo Artist or the main firm
-    address private acceptor; // 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db
+    address private acceptor;
 
     // Fees
     uint256 private PaymentRate;
