@@ -14,7 +14,7 @@ contract TrueCoreContract {
 
     // Fees
     uint256 private PaymentRate;
-    uint256 private ViewCount;
+    uint256 private PerViewCountBlock;
 
     uint256 private IssuerFee = 0;
     uint256 private HolderFee = 0;
@@ -217,26 +217,6 @@ contract TrueCoreContract {
             );
     }
 
-    // Set the rate of the fee each party takes
-    function setFee(uint fee) public {
-        require (ContractApproval == false, "Contract already approved, no edits allowed");
-        require (msg.sender == holder || msg.sender == acceptor || msg.sender == issuer, "Only Issuer, Holder or Acceptor can set rates");
-
-        // Validations
-        require (checkTotalFee(fee) == false, "Rates are about 100% error");
-
-        if (msg.sender == holder) {
-            HolderFee = fee;
-        } else if(msg.sender == issuer) {
-            IssuerFee = fee;
-        } else if(msg.sender == acceptor) {
-            AcceptorFee = fee;
-        }
-
-        // Resets approval when rates are changed
-        resetApproval();
-    }
-
     // Holder and Acceptor Approval Area
     function setApprovalStatus(bool status) public {
         // uint approvalDate = block.timestamp;
@@ -258,11 +238,13 @@ contract TrueCoreContract {
             holderApproval = status;
         } else if (msg.sender == acceptor) {
             acceptorApproval = status;
+        } else if (msg.sender == issuer) {
+            issuerApproval = status;
         }
 
         // Set overall approval of contract to true if all accept
         if (issuerApproval == true && holderApproval == true && acceptorApproval == true) {
-            ContractApproval = true;
+            finalChecks();
         } else {
             ContractApproval = false;
             if (holderApproval != true) {
@@ -272,8 +254,57 @@ contract TrueCoreContract {
             if (acceptorApproval != true) {
                 emit OutputMessage("Pending Acceptor Approval");
             }
+
+            if (issuerApproval != true) {
+                emit OutputMessage("Pending Issuer Approval");
+            }
         }
     }
+
+    // Set the Payment Rate Per View of song
+    function setPaymentRate(uint rate) public {
+        require (ContractApproval == false, "Contract already approved, no edits allowed");
+        require (msg.sender == holder, "Only Holder can set rates");
+
+        PaymentRate = rate;
+
+        // Resets approval when rates are changed
+        resetApproval();
+    }
+
+    // Set the Payment Rate Per View of song
+    function setViewCountBlock(uint ViewBlock) public {
+        require (ContractApproval == false, "Contract already approved, no edits allowed");
+        require (msg.sender == holder, "Only Holder can set rates");
+
+        PerViewCountBlock = ViewBlock;
+
+        // Resets approval when rates are changed
+        resetApproval();
+    }
+
+    // Set the rate of the fee each party takes
+    function setFee(uint fee) public {
+        require (ContractApproval == false, "Contract already approved, no edits allowed");
+        require (msg.sender == holder || msg.sender == acceptor || msg.sender == issuer, "Only Issuer, Holder or Acceptor can set rates");
+
+        // Validations
+        require (checkTotalFee(fee) == false, "Rates are about 100% error");
+
+        if (msg.sender == holder) {
+            HolderFee = fee;
+        } else if(msg.sender == issuer) {
+            IssuerFee = fee;
+        } else if(msg.sender == acceptor) {
+            AcceptorFee = fee;
+        }
+
+        // Resets approval when rates are changed
+        resetApproval();
+    }
+
+
+    // INTERNAL FUNCTIONS ---------------------------------------------------------------------------------------------------
 
     // Resets approval
     function resetApproval() private {
@@ -297,6 +328,25 @@ contract TrueCoreContract {
         return false;
     }
 
-    // Do function to check if all variables are inside !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
+    // Final checks if all required values are inside
+    function finalChecks() private {
+        require(issuerApproval == true && holderApproval == true && acceptorApproval == true, "Not all approved");
+        require(
+            bytes(tracks[acceptor].TrackName).length != 0 &&
+            bytes(tracks[acceptor].Genre).length != 0 &&
+            bytes(tracks[acceptor].PrimaryArtist).length != 0 &&
+            bytes(tracks[acceptor].Composer).length != 0 &&
+            bytes(tracks[acceptor].Publisher).length != 0 &&
+            bytes(tracks[acceptor].MasterRecordingOwner).length != 0 &&
+            tracks[acceptor].YearOfComposition != 0 &&
+            tracks[acceptor].YearOfRecording != 0,
+            "Metadata Missing");
+        
+        require(PaymentRate != 0, "Payment Rate Cannot Be Empty");
+        require(PerViewCountBlock != 0, "Per View Count Cannot Be Empty");
+
+        ContractApproval == true;
+
+        emit OutputMessage("Contract Approved");
+    }
 }
