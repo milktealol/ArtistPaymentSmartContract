@@ -83,17 +83,71 @@ contract TrueCoreContract {
         acceptor = acceptorVal;
     }
 
-    function getGeneralInfo() public view returns (
+    function ViewPartiesDetails() public view returns (
         address issuerVal,
         address holderVal,
-        address acceptorVal,
-        bool ContractApprovalVal
+        address acceptorVal
     ) {
         return (
             issuer,
             holder,
-            acceptor,
-            ContractApproval
+            acceptor
+        );
+    }
+
+    function ViewContractDetails() public pure returns (
+        uint256 _PaymentRate,
+        uint256 _PerViewCountBlock,
+
+        uint256 _IssuerFee,
+        uint256 _HolderFee,
+        uint256 _AcceptorFee,
+
+        uint256 _ContractEnd,
+        uint256 _ContractStart,
+
+        bool  _issuerApproval,
+        bool _holderApproval,
+        bool _acceptorApproval,
+        bool _ContractApprovalVal
+    ) {
+        return (
+            _PaymentRate,
+            _PerViewCountBlock,
+
+            _IssuerFee,
+            _HolderFee,
+            _AcceptorFee,
+
+            _ContractEnd,
+            _ContractStart,
+
+            _issuerApproval,
+            _holderApproval,
+            _acceptorApproval,
+            _ContractApprovalVal
+        );
+    }
+
+    function ViewMetadata() public view returns (
+        string memory TrackName, 
+        string memory Genre, 
+        string memory PrimaryArtist, 
+        string memory Composer, 
+        string memory Publisher, 
+        string memory MasterRecordingOwner, 
+        uint256 YearOfComposition, 
+        uint256 YearOfRecording
+    ) {
+        return (
+            tracks[acceptor].TrackName,
+            tracks[acceptor].Genre,
+            tracks[acceptor].PrimaryArtist,
+            tracks[acceptor].Composer,
+            tracks[acceptor].Publisher,
+            tracks[acceptor].MasterRecordingOwner,
+            tracks[acceptor].YearOfComposition,
+            tracks[acceptor].YearOfRecording
         );
     }
 
@@ -194,73 +248,6 @@ contract TrueCoreContract {
         resetApproval();
     }
 
-    // Viewing of Meta Data
-    function getMetaData() view public returns (
-        string memory TrackName, 
-        string memory Genre, 
-        string memory PrimaryArtist, 
-        string memory Composer, 
-        string memory Publisher, 
-        string memory MasterRecordingOwner, 
-        uint256 YearOfComposition, 
-        uint256 YearOfRecording
-        ) {
-        return(
-            tracks[acceptor].TrackName,
-            tracks[acceptor].Genre,
-            tracks[acceptor].PrimaryArtist,
-            tracks[acceptor].Composer,
-            tracks[acceptor].Publisher,
-            tracks[acceptor].MasterRecordingOwner,
-            tracks[acceptor].YearOfComposition,
-            tracks[acceptor].YearOfRecording
-            );
-    }
-
-    // Holder and Acceptor Approval Area
-    function setApprovalStatus(bool status) public {
-        // uint approvalDate = block.timestamp;
-
-        require (ContractApproval == false, "Contract already approved, no edits allowed");
-        require (msg.sender == issuer || msg.sender == holder || msg.sender == acceptor, "Only Issuer, Holder or Acceptor can approve");
-
-        // Check if they send the same status
-        if (msg.sender == holder) {
-            require (holderApproval != status, "Status is the same");
-        } else if (msg.sender == acceptor) {
-            require (acceptorApproval != status, "Status is the same");
-        } else if (msg.sender == issuer) {
-            require (issuerApproval != status, "Status is the same");
-        }
-
-        // Changes their approval status
-        if (msg.sender == holder) {
-            holderApproval = status;
-        } else if (msg.sender == acceptor) {
-            acceptorApproval = status;
-        } else if (msg.sender == issuer) {
-            issuerApproval = status;
-        }
-
-        // Set overall approval of contract to true if all accept
-        if (issuerApproval == true && holderApproval == true && acceptorApproval == true) {
-            finalChecks();
-        } else {
-            ContractApproval = false;
-            if (holderApproval != true) {
-                emit OutputMessage("Pending Holder Approval");
-            }
-
-            if (acceptorApproval != true) {
-                emit OutputMessage("Pending Acceptor Approval");
-            }
-
-            if (issuerApproval != true) {
-                emit OutputMessage("Pending Issuer Approval");
-            }
-        }
-    }
-
     // Set the Payment Rate Per View of song
     function setPaymentRate(uint rate) public {
         require (ContractApproval == false, "Contract already approved, no edits allowed");
@@ -301,6 +288,64 @@ contract TrueCoreContract {
 
         // Resets approval when rates are changed
         resetApproval();
+    }
+
+    // Set the contract start end date
+    function contractStartEnd(uint startdate, uint enddate) public {
+        require (ContractApproval == false, "Contract already approved, no edits allowed");
+        require (msg.sender == holder, "Only Holder can set contract start end date");
+
+        require (startdate > block.timestamp && enddate > block.timestamp, "Start or end date has past");
+        require (startdate > enddate, "Start must be more than end date");
+
+        ContractStart = startdate;
+        ContractEnd = enddate;
+
+        // Resets approval when rates are changed
+        resetApproval();
+    }
+
+    // Approval Area
+    function setApprovalStatus(bool status) public {
+
+        require (ContractApproval == false, "Contract already approved, no edits allowed");
+        require (msg.sender == issuer || msg.sender == holder || msg.sender == acceptor, "Only Issuer, Holder or Acceptor can approve");
+
+        // Check if they send the same status
+        if (msg.sender == holder) {
+            require (holderApproval != status, "Status is the same");
+        } else if (msg.sender == acceptor) {
+            require (acceptorApproval != status, "Status is the same");
+        } else if (msg.sender == issuer) {
+            require (issuerApproval != status, "Status is the same");
+        }
+
+        // Changes their approval status
+        if (msg.sender == holder) {
+            holderApproval = status;
+        } else if (msg.sender == acceptor) {
+            acceptorApproval = status;
+        } else if (msg.sender == issuer) {
+            issuerApproval = status;
+        }
+
+        // Set overall approval of contract to true if all accept
+        if (issuerApproval == true && holderApproval == true && acceptorApproval == true) {
+            finalChecks();
+        } else {
+            ContractApproval = false;
+            if (holderApproval != true) {
+                emit OutputMessage("Pending Holder Approval");
+            }
+
+            if (acceptorApproval != true) {
+                emit OutputMessage("Pending Acceptor Approval");
+            }
+
+            if (issuerApproval != true) {
+                emit OutputMessage("Pending Issuer Approval");
+            }
+        }
     }
 
 
