@@ -20,10 +20,6 @@ contract TrueCoreContract {
     uint256 private HolderFee = 0;
     uint256 private AcceptorFee = 0;
 
-    // Song Details
-    // Meta Data
-    string[] private SongMeta;
-
     // Approval Status
     bool private issuerApproval = false;
     bool private holderApproval = false;
@@ -44,6 +40,24 @@ contract TrueCoreContract {
 
     event OutputMessage(string m);
 
+    // Metadata, Song Details
+    uint256 private trackCounter = 0;
+
+    // TrackTestName, Pop, Artist1, Composer1, Publish1, Owner1, 2020, 2020
+    struct track {
+        string TrackName;
+        string Genre;
+        string PrimaryArtist;
+        string Composer;
+        string Publisher;
+        string MasterRecordingOwner;
+        uint256 YearOfComposition;
+        uint256 YearOfRecording;
+    }
+
+    mapping(address => track) tracks;
+    address[] public tracksArray;
+
     // External Party
     uint256 private externalPartyCounter = 0;
 
@@ -56,6 +70,7 @@ contract TrueCoreContract {
 
     mapping(address => externalParty) externalParties;
     address[] public externalPartiesArray;
+
 
     constructor(
         address issuerVal,
@@ -151,6 +166,57 @@ contract TrueCoreContract {
         return externalPartiesArray;
     }
 
+    // Adding or Updating Metadata
+    function addUpdateMetaData(
+        string memory TrackName, 
+        string memory Genre, 
+        string memory PrimaryArtist, 
+        string memory Composer, 
+        string memory Publisher, 
+        string memory MasterRecordingOwner, 
+        uint256 YearOfComposition, 
+        uint256 YearOfRecording
+        ) public {
+        require (ContractApproval == false, "Contract already approved, no edits allowed");
+
+        require (msg.sender == acceptor, "Only Acceptor can set Metadata for song");
+
+        tracks[msg.sender].TrackName = TrackName;
+        tracks[msg.sender].Genre = Genre;
+        tracks[msg.sender].PrimaryArtist = PrimaryArtist;
+        tracks[msg.sender].Composer = Composer;
+        tracks[msg.sender].Publisher = Publisher;
+        tracks[msg.sender].MasterRecordingOwner = MasterRecordingOwner;
+        tracks[msg.sender].YearOfComposition = YearOfComposition;
+        tracks[msg.sender].YearOfRecording = YearOfRecording;
+
+        // When there is new party, approval gets reset
+        resetApproval();
+    }
+
+    // Viewing of Meta Data
+    function getMetaData() view public returns (
+        string memory TrackName, 
+        string memory Genre, 
+        string memory PrimaryArtist, 
+        string memory Composer, 
+        string memory Publisher, 
+        string memory MasterRecordingOwner, 
+        uint256 YearOfComposition, 
+        uint256 YearOfRecording
+        ) {
+        return(
+            tracks[acceptor].TrackName,
+            tracks[acceptor].Genre,
+            tracks[acceptor].PrimaryArtist,
+            tracks[acceptor].Composer,
+            tracks[acceptor].Publisher,
+            tracks[acceptor].MasterRecordingOwner,
+            tracks[acceptor].YearOfComposition,
+            tracks[acceptor].YearOfRecording
+            );
+    }
+
     // Set the rate of the fee each party takes
     function setFee(uint fee) public {
         require (ContractApproval == false, "Contract already approved, no edits allowed");
@@ -232,4 +298,5 @@ contract TrueCoreContract {
     }
 
     // Do function to check if all variables are inside !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
 }
