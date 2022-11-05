@@ -100,37 +100,37 @@ contract TrueCoreContract {
         );
     }
 
-    function ViewContractDetails() public pure returns (
-        uint256 _PaymentRate,
-        uint256 _PerViewCountBlock,
+    function ViewContractDetails() public view returns (
+        uint256 PaymentRateVal,
+        uint256 PerViewCountBlockVal,
 
-        uint256 _IssuerFee,
-        uint256 _HolderFee,
-        uint256 _AcceptorFee,
+        uint256 IssuerFeeVal,
+        uint256 HolderFeeVal,
+        uint256 AcceptorFeeVal,
 
-        uint256 _ContractEnd,
-        uint256 _ContractStart,
+        uint256 ContractEndVal,
+        uint256 ContractStartVal,
 
-        bool  _issuerApproval,
-        bool _holderApproval,
-        bool _acceptorApproval,
-        bool _ContractApprovalVal
+        bool issuerApprovalVal,
+        bool holderApprovalVal,
+        bool acceptorApprovalVal,
+        bool ContractApprovalVal
     ) {
         return (
-            _PaymentRate,
-            _PerViewCountBlock,
+            PaymentRate,
+            PerViewCountBlock,
 
-            _IssuerFee,
-            _HolderFee,
-            _AcceptorFee,
+            IssuerFee,
+            HolderFee,
+            AcceptorFee,
 
-            _ContractEnd,
-            _ContractStart,
+            ContractEnd,
+            ContractStart,
 
-            _issuerApproval,
-            _holderApproval,
-            _acceptorApproval,
-            _ContractApprovalVal
+            issuerApproval,
+            holderApproval,
+            acceptorApproval,
+            ContractApprovalVal
         );
     }
 
@@ -300,7 +300,7 @@ contract TrueCoreContract {
         require (msg.sender == holder, "Only Holder can set contract start end date");
 
         require (startdate > block.timestamp && enddate > block.timestamp, "Start or end date has past");
-        require (startdate > enddate, "Start must be more than end date");
+        require (startdate < enddate, "Start must be more than end date");
 
         ContractStart = startdate;
         ContractEnd = enddate;
@@ -365,7 +365,7 @@ contract TrueCoreContract {
     }
 
     // Issuer to confirm payment receipt
-    function ConfirmPaymentAmount(uint paymentAmountReceived) public {
+    function ConfirmPaymentAmount(uint256 paymentAmountReceived) public {
         require (msg.sender == issuer, "Only Issuer can confirm payment receipt");
         require (ContractApproval == true, "Contract have to be completed before payment is made");
         require (paymentAmountReceived > 0, "Please input accurate amount");
@@ -423,7 +423,11 @@ contract TrueCoreContract {
         require(PaymentRate != 0, "Payment Rate Cannot Be Empty");
         require(PerViewCountBlock != 0, "Per View Count Cannot Be Empty");
 
-        // Add checks for contract date
+        require(ContractStart != 0, "Contract Start Cannot Be Empty");
+        require(ContractEnd != 0, "Contract End Cannot Be Empty");
+
+        require(HolderFee > 0, "Please check Holder Fee");
+        require(IssuerFee > 0, "Please check Issuer Fee");
 
         uint additionalFees = 0;
         for (uint256 i = 0; i < externalPartiesArray.length; ++i) {
