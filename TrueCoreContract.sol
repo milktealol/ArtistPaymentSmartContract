@@ -121,7 +121,7 @@ contract TrueCoreContract {
             issuerApproval,
             holderApproval,
             acceptorApproval,
-            ContractApprovalVal
+            ContractApproval
         );
     }
 
