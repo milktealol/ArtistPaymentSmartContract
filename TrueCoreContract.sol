@@ -4,13 +4,13 @@ contract TrueCoreContract {
 
     // Addresses
     // TrueCore
-    address private issuer; // 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4
+    address private issuer;
 
     // Spotify and other hosting company
-    address private holder; // 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2
+    address private holder;
 
     // Solo Artist or the main firm
-    address private acceptor; // 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db
+    address private acceptor;
 
     // Fees
     uint256 private PaymentRate;
@@ -26,8 +26,6 @@ contract TrueCoreContract {
     bool private acceptorApproval = false;
     bool private ContractApproval = false;
 
-    event StatusChanged(address id, bool latestStatus, uint256 timestamp); 
-
     // Wallet
     uint256 private IssuerWalletBalance;
     uint256 private HolderWalletBalance;
@@ -37,19 +35,15 @@ contract TrueCoreContract {
     bool paymentPending = false;
     uint256 TotalPayable;
 
-    // MISC
-    uint256 private issuanceTime;
+    // Contract Start End Date
     uint256 private ContractEnd;
     uint256 private ContractStart;
 
     // Printing out of message
     event OutputMessage(string m);
 
-    // Metadata, Song Details
-    uint256 private trackCounter = 0;
-
-    // TrackTestName, Pop, Artist1, Composer1, Publish1, Owner1, 2020, 2020
-    struct track {
+    // Metadata, Song Details Mapping
+    struct track { // TrackTestName, Pop, Artist1, Composer1, Publish1, Owner1, 2020, 2020
         string TrackName;
         string Genre;
         string PrimaryArtist;
@@ -63,9 +57,7 @@ contract TrueCoreContract {
     mapping(address => track) tracks;
     address[] public tracksArray;
 
-    // External Party
-    uint256 private externalPartyCounter = 0;
-
+    // External Party Mapping
     struct externalParty {
         string PartyName;
         uint256 fee;
@@ -75,7 +67,6 @@ contract TrueCoreContract {
 
     mapping(address => externalParty) externalParties;
     address[] public externalPartiesArray;
-
 
     constructor(
         address issuerVal,
@@ -183,7 +174,7 @@ contract TrueCoreContract {
         require (ContractApproval == false, "Contract already approved, no edits allowed");
         require (msg.sender != holder && msg.sender != acceptor && msg.sender != issuer, "Issuer, Holder or Acceptor cannot set be the additional party");
 
-        require (checkTotalFee(fee) == false, "Rates are about 100% error");
+        require (checkTotalFee(fee) == false, "Rates are above 100% error");
 
         externalParties[msg.sender].PartyName = PartyName;
         externalParties[msg.sender].fee = fee;
@@ -194,35 +185,6 @@ contract TrueCoreContract {
         // When there is new party, approval gets reset
         resetApproval();
     }
-
-    // Removal Still not working
-    // Removing additional external parties
-    // function removeParty(address PartyAddress) public {
-    //     require (ContractApproval == false, "Contract already approved, no edits allowed");
-
-    //     require (msg.sender == acceptor || msg.sender == issuer, "Only Issuer or Accept can remove additional parties");
-
-    //     delete externalParties[PartyAddress];
-
-    //     for (uint256 i = 0; i < externalPartiesArray.length; ++i) {
-    //         if (externalPartiesArray[i] == PartyAddress) {
-
-    //             for (uint x = i; i< externalPartiesArray.length-1; i++){
-    //                 externalPartiesArray[x] = externalPartiesArray[x+1];
-    //             }
-    //             delete externalPartiesArray[externalPartiesArray.length-1];
-    //             externalPartiesArray.pop();
-
-
-    //             delete externalPartiesArray[i];
-    //             emit OutputMessage("Additional Party Removed");
-    //             break;
-    //         }
-    //     }
-
-    //     // When there is a party update, approval gets reset
-    //     resetApproval();
-    // }
 
     // Count how many external parties are there
     function count () view public returns(uint) {
