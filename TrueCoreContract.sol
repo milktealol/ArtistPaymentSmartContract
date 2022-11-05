@@ -4,13 +4,13 @@ contract TrueCoreContract {
 
     // Addresses
     // TrueCore
-    address private issuer;
+    address private issuer; // 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4
 
     // Spotify and other hosting company
-    address private holder;
+    address private holder; // 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2
 
     // Solo Artist or the main firm
-    address private acceptor;
+    address private acceptor; // 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db
 
     // Fees
     uint256 private PaymentRate;
@@ -33,11 +33,16 @@ contract TrueCoreContract {
     uint256 private HolderWalletBalance;
     uint256 private AcceptorWalletBalance;
 
+    // Payment
+    bool paymentPending = false;
+    uint256 TotalPayable;
+
     // MISC
     uint256 private issuanceTime;
     uint256 private ContractEnd;
     uint256 private ContractStart;
 
+    // Printing out of message
     event OutputMessage(string m);
 
     // Metadata, Song Details
@@ -168,6 +173,7 @@ contract TrueCoreContract {
     // Adding additional external parties
     function addParty(string memory PartyName, uint256 fee) public {
         require (ContractApproval == false, "Contract already approved, no edits allowed");
+        require (msg.sender != holder && msg.sender != acceptor && msg.sender != issuer, "Issuer, Holder or Acceptor cannot set be the additional party");
 
         require (checkTotalFee(fee) == false, "Rates are about 100% error");
 
@@ -273,7 +279,7 @@ contract TrueCoreContract {
     // Set the rate of the fee each party takes
     function setFee(uint fee) public {
         require (ContractApproval == false, "Contract already approved, no edits allowed");
-        require (msg.sender == holder || msg.sender == acceptor || msg.sender == issuer, "Only Issuer, Holder or Acceptor can set rates");
+        require (msg.sender == holder || msg.sender == issuer, "Only Issuer, Holder or Acceptor can set rates");
 
         // Validations
         require (checkTotalFee(fee) == false, "Rates are about 100% error");
@@ -282,8 +288,6 @@ contract TrueCoreContract {
             HolderFee = fee;
         } else if(msg.sender == issuer) {
             IssuerFee = fee;
-        } else if(msg.sender == acceptor) {
-            AcceptorFee = fee;
         }
 
         // Resets approval when rates are changed
@@ -348,6 +352,35 @@ contract TrueCoreContract {
         }
     }
 
+    // Payment FUNCTIONS ---------------------------------------------------------------------------------------------------
+    function MakePayment(uint256 viewCount) public {
+        require (msg.sender == holder, "Only Holder can make payment");
+        require (ContractApproval == true, "Contract have to be completed before payment is made");
+        require (paymentPending == false, "There is a payment pending, please contact issuer to approve before proceeding");
+        require (viewCount > PerViewCountBlock, "Value have to be higher than per view count block");
+
+        TotalPayable = viewCount / PerViewCountBlock * PaymentRate;
+
+        paymentPending = true;
+    }
+
+    // Issuer to confirm payment receipt
+    function ConfirmPaymentAmount(uint paymentAmountReceived) public {
+        require (msg.sender == issuer, "Only Issuer can confirm payment receipt");
+        require (ContractApproval == true, "Contract have to be completed before payment is made");
+        require (paymentAmountReceived > 0, "Please input accurate amount");
+
+
+        // Do spliting of bill
+        splitPayment(paymentAmountReceived);
+
+        TotalPayable -= paymentAmountReceived;
+
+        if (TotalPayable <= 0) {
+            paymentPending = false;
+        }
+
+    }
 
     // INTERNAL FUNCTIONS ---------------------------------------------------------------------------------------------------
 
@@ -361,7 +394,7 @@ contract TrueCoreContract {
     // Validation check to ensure rate not > 100
     function checkTotalFee(uint fee) private view returns(bool){
         uint CheckFees = 0;
-        CheckFees = fee + CheckFees + IssuerFee + HolderFee + AcceptorFee;
+        CheckFees = fee + CheckFees + IssuerFee + HolderFee;
         for (uint256 i = 0; i < externalPartiesArray.length; ++i) {
             if (CheckFees > 100) {
                 return true;
@@ -390,8 +423,29 @@ contract TrueCoreContract {
         require(PaymentRate != 0, "Payment Rate Cannot Be Empty");
         require(PerViewCountBlock != 0, "Per View Count Cannot Be Empty");
 
-        ContractApproval == true;
+        // Add checks for contract date
+
+        uint additionalFees = 0;
+        for (uint256 i = 0; i < externalPartiesArray.length; ++i) {
+            additionalFees += externalParties[externalPartiesArray[i]].fee;
+        }
+
+        AcceptorFee = 100 - HolderFee - IssuerFee - additionalFees;
+
+        ContractApproval = true;
 
         emit OutputMessage("Contract Approved");
+    }
+
+    // Spliting of payment
+    function splitPayment(uint256 paymentAmountReceived) private {
+        IssuerWalletBalance += paymentAmountReceived / 100 * IssuerFee;
+        HolderWalletBalance += paymentAmountReceived / 100 * HolderFee;
+        AcceptorWalletBalance += paymentAmountReceived / 100 * AcceptorFee;
+
+        for (uint256 i = 0; i < externalPartiesArray.length; ++i) {
+            uint256 currentBalance = externalParties[externalPartiesArray[i]].PartyWalletBalance;
+            externalParties[externalPartiesArray[i]].PartyWalletBalance = currentBalance + paymentAmountReceived / 100 * externalParties[externalPartiesArray[i]].fee;
+        }
     }
 }
