@@ -390,6 +390,29 @@ contract TrueCoreContract {
 
     }
 
+    // Withdraw FUNCTIONS ---------------------------------------------------------------------------------------------------
+    function withdraw(uint256 WithdrawAmount) public {
+        if (msg.sender == holder) {
+            HolderWalletBalance -= WithdrawAmount;
+        } else if (msg.sender == acceptor) {
+            AcceptorWalletBalance -= WithdrawAmount;
+        } else if (msg.sender == issuer) {
+            IssuerWalletBalance -= WithdrawAmount;
+        } else {
+            require (externalParties[msg.sender].isExist, "No User of Wallet Found");
+
+            externalParties[msg.sender].PartyWalletBalance = externalParties[msg.sender].PartyWalletBalance - WithdrawAmount;
+            // for (uint256 i = 0; i < externalPartiesArray.length; ++i) {
+            //     if (externalPartiesArray[i] == msg.sender) {
+            //         uint256 currentBalance = externalParties[externalPartiesArray[i]].PartyWalletBalance;
+            //         externalParties[externalPartiesArray[i]].PartyWalletBalance = currentBalance - WithdrawAmount;
+            //         return;
+            //     }
+            // }
+
+        }
+    }
+
     // INTERNAL FUNCTIONS ---------------------------------------------------------------------------------------------------
 
     // Resets approval
