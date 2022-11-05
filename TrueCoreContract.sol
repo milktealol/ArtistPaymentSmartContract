@@ -170,6 +170,14 @@ contract TrueCoreContract {
         }
     }
 
+    function RemainingPayment() public view returns (
+        uint256 TotalPayableVal
+    ) {
+        return (
+            TotalPayable
+        );
+    }
+
     // Adding additional external parties
     function addParty(string memory PartyName, uint256 fee) public {
         require (ContractApproval == false, "Contract already approved, no edits allowed");
