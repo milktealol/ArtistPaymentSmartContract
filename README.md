@@ -94,7 +94,7 @@ This step is for the issuer to confirm that they have physically received the pa
 -- "ConfirmPayment"
 
 ### Testing values
-- "ConfirmPayment": 100000
+- "ConfirmPayment": 10000
 
 Note: Payment can be done in batches
 Note2: If there are existing payments not cleared by the Issuer, Holder cannot initiate any new payment within the blockchain
@@ -102,7 +102,7 @@ Note2: If there are existing payments not cleared by the Issuer, Holder cannot i
 ## Step 3: Transfering to wallets of the related party (Automatic)
 Once any payment has been confirmed, the SC will automatically transfer the money based on their rates into their individual wallets according to the contract.
 
-# Withdrawl Instruction
+# Withdrawal Instruction
 This section will be used for the parties to withdraw out the money
 
 ## Step 1: Party initiates the withdrawal of money
