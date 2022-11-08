@@ -55,7 +55,7 @@ contract TrueCoreContract {
     }
 
     mapping(address => track) tracks;
-    address[] public tracksArray;
+    address[] private tracksArray;
 
     // External Party Mapping
     struct externalParty {
@@ -66,7 +66,7 @@ contract TrueCoreContract {
     }
 
     mapping(address => externalParty) externalParties;
-    address[] public externalPartiesArray;
+    address[] private externalPartiesArray;
 
     constructor(
         address issuerVal,
