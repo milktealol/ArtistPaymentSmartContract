@@ -1,6 +1,6 @@
 pragma solidity ^0.8.17;
 
-contract TrueCoreContract {
+contract TuneCoreContract {
 
     // Addresses
     // TrueCore
